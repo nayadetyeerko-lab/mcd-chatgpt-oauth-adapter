@@ -172,7 +172,24 @@ function issueTokens(clientId, scope = "mcp") {
 }
 
 function validateClientAndRedirect(clientId, redirectUri) {
-  const client = clients.get(clientId);
+  let client = clients.get(clientId);
+  // Render free services can restart/redeploy, which clears the in-memory DCR
+  // registry. ChatGPT may then reuse its previously issued public client_id.
+  // Recover that registration only when the redirect URI still passes our
+  // strict ChatGPT/OpenAI allow-list. This keeps reconnects working without
+  // storing OAuth client registrations on disk.
+  if (!client && clientId && redirectUri && isAllowedRedirect(redirectUri)) {
+    client = {
+      client_id: String(clientId),
+      client_name: "ChatGPT (recovered)",
+      redirect_uris: [String(redirectUri)],
+      grant_types: ["authorization_code", "refresh_token"],
+      response_types: ["code"],
+      token_endpoint_auth_method: "none",
+      created_at: nowSeconds(),
+    };
+    clients.set(String(clientId), client);
+  }
   if (!client) return { error: "unknown client_id" };
   if (!client.redirect_uris.includes(redirectUri)) {
     return { error: "redirect_uri is not registered for this client" };
