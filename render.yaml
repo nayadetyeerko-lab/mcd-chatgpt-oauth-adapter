@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: mcd-chatgpt-oauth-adapter
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MCD_MCP_URL
+        value: https://mcp.mcd.cn
+      - key: MCD_MCP_TOKEN
+        sync: false
+      - key: ADAPTER_OWNER_PASSWORD
+        sync: false
+      - key: ALLOW_ORDER_CREATION
+        value: "false"
+      - key: OAUTH_ACCESS_TOKEN_TTL_SECONDS
+        value: "900"
+      - key: OAUTH_REFRESH_TOKEN_TTL_SECONDS
+        value: "2592000"
+      - key: OAUTH_AUTHORIZATION_CODE_TTL_SECONDS
+        value: "300"
